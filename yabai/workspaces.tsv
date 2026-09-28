@@ -1,0 +1,9 @@
+1	Home	float	^Finder$	Carbon Copy Cloner|Finder|Reminders|Weather|Clock|Music|Plex[Aa]mp|Preview
+2	Writing	bsp	^Sublime Text$	Sublime Text|Day One|Pages|Microsoft Word|Scrivener|Ulysses|iA Writer|Typora|Marked 2|TextEdit|Hemingway Editor|Obsidian|LibreOffice|OpenOffice
+3	Reading	bsp	^Google Chrome$	Google Chrome|Books|Kindle|calibre|Skim|PDF Expert|Reeder|ReadKit|NetNewsWire|News
+4	Research	bsp	^DEVONthink$	DEVONthink|DEVONagent|Zotero|Bookends|Papers|EndNote|Mendeley Reference Manager|EagleFiler
+5	Development	bsp	^iTerm2?$	iTerm2?|Ghostty|Warp|Visual Studio Code|VSCodium|Cursor|Nova|Sublime Merge|GitHub Desktop|Docker Desktop|Transmit|Cyberduck|ForkLift|Zed
+6	MIS	bsp	^Firefox( ESR)?$	Firefox( ESR)?|Numbers|Microsoft Excel|TablePlus|Sequel Ace|DBeaver|MySQLWorkbench|FileMaker Pro|Tableau|Power BI Desktop|Base
+7	Mail/Messages	float	-	Airmail|Calendar|Contacts|Mail|Microsoft Outlook|Spark|Postbox|Messages|Signal|WhatsApp|Telegram|Slack|Discord
+8	Meet	float	-	zoom\.us|FaceTime|Microsoft Teams|Webex|GoTo|GoToMeeting|Around|mmhmm|OBS|QuickTime Player
+9	VM	float	-	UTM|VMware Fusion|VirtualBox|VirtualBoxVM|Parallels Desktop|Windows App|Microsoft Remote Desktop|Screen Sharing|XQuartz|FreeRDP

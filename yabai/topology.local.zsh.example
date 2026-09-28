@@ -1,0 +1,7 @@
+# Machine-local display topology. Copy to topology.local.zsh and keep it out of Git.
+
+DISPLAY_UUIDS[internal]='00000000-0000-0000-0000-000000000000'
+DISPLAY_UUIDS[external]='11111111-1111-1111-1111-111111111111'
+
+SPACE_TARGETS[Development]=external
+SPACE_TARGETS[Home]=internal

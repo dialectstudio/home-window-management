@@ -1,0 +1,4 @@
+# Copy to plex.conf and keep the local file out of Git.
+
+PLEX_URL="plex.example.test"
+PLEX_TOKEN_FILE="$HOME/.config/sketchybar/secrets/plex-token"

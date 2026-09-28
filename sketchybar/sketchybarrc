@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+
+# ~/.config/sketchybar/sketchybarrc
+
+export PATH="/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin"
+export CONFIG_DIR="$HOME/.config/sketchybar"
+export PLUGIN_DIR="$CONFIG_DIR/plugins"
+export ITEM_DIR="$CONFIG_DIR/items"
+
+# Set to debug, info, warn, error, or off. The log is generated runtime state.
+export SKETCHYBAR_LOG_LEVEL="${SKETCHYBAR_LOG_LEVEL:-warn}"
+export SKETCHYBAR_LOG_FILE="${SKETCHYBAR_LOG_FILE:-${TMPDIR:-/tmp}/sketchybar-${UID}.log}"
+export SKETCHYBAR_LOG_LEVEL_FILE="${TMPDIR:-/tmp}/sketchybar-${UID}.log-level"
+printf '%s\n' "$SKETCHYBAR_LOG_LEVEL" >"$SKETCHYBAR_LOG_LEVEL_FILE"
+
+# Load global styles, colors and icons
+# Bash source libraries: styles -> icons + colours.
+source "$CONFIG_DIR/globalstyles.sh"
+source "$CONFIG_DIR/log.sh"
+source "$CONFIG_DIR/events.sh"
+
+sketchybar_log debug "loading SketchyBar configuration"
+
+# The hotloader watches the entire config directory, including local and runtime
+# files. Reload only through the documented command or skhd binding.
+sketchybar --hotload off
+
+POPUP_CLICK_SCRIPT="sketchybar --set \$NAME popup.drawing=toggle"
+POPUP_OFF="sketchybar --set \$NAME popup.drawing=off"
+
+# Unload the macOS on screen indicator overlay for volume change
+# launchctl unload -F /System/Library/LaunchAgents/com.apple.OSDUIHelper.plist > /dev/null 2>&1 &
+
+sketchybar \
+	--bar "${bar[@]}"\
+	--default "${item_defaults[@]}"
+
+# -----------------------------------------------------------------------------
+# Left
+# -----------------------------------------------------------------------------
+
+# source "$ITEM_DIR/apple.sh"
+
+source "$ITEM_DIR/yabai.sh"
+source "$ITEM_DIR/spacer.sh" 1 left
+source "$ITEM_DIR/spaces-simple.sh"
+
+# source "$ITEM_DIR/spaces.sh"
+
+source "$ITEM_DIR/spacer.sh" 3 left
+
+# -----------------------------------------------------------------------------
+# Notch
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Right - system
+# -----------------------------------------------------------------------------
+
+source "$ITEM_DIR/control-center.sh"
+source "$ITEM_DIR/datetime.sh"
+source "$ITEM_DIR/dnd.sh"
+source "$ITEM_DIR/dndindicator.sh"
+# source "$ITEM_DIR/wifi.sh"
+source "$ITEM_DIR/network.sh"
+source "$ITEM_DIR/volume.sh"
+source "$ITEM_DIR/battery.sh"
+source "$ITEM_DIR/diskmonitor.sh"
+
+source "$ITEM_DIR/spacer.sh" 2 right
+
+# -----------------------------------------------------------------------------
+# Right - information
+# -----------------------------------------------------------------------------
+
+source "$ITEM_DIR/brew.sh" right
+
+# source "$ITEM_DIR/reminders.sh" right
+# source "$ITEM_DIR/messages.sh" right
+# source "$ITEM_DIR/mail.sh" right
+
+source "$ITEM_DIR/weather.sh" right
+source "$ITEM_DIR/spacer.sh" 5 right
+source "$ITEM_DIR/location.sh" right
+
+# source "$ITEM_DIR/stress.sh" right
+# source "$ITEM_DIR/transmission.sh" right
+
+source "$ITEM_DIR/music.sh" right
+
+source "$ITEM_DIR/spacer.sh" 4 right
+
+
+# -----------------------------------------------------------------------------
+# Brackets '/space\..*/'
+# -----------------------------------------------------------------------------
+
+sketchybar \
+	--add bracket left.side '/space\..*/'  \
+	--set left.side "${bracket_defaults[@]}" \
+	\
+	--add bracket notifications weather brew \
+	--set notifications "${bracket_defaults[@]}" \
+	\
+	--add bracket status_icons \
+	diskmonitor \
+	volume_icon \
+	volume \
+	dnd \
+	dndindicator \
+	date \
+	clock \
+	battery \
+	--set status_icons "${bracket_defaults[@]}"
+
+sketchybar --update

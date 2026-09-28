@@ -1,0 +1,514 @@
+#!/bin/zsh
+
+# ~/.config/yabai/yabairc
+# yabai window-management configuration
+#
+# Spaces:
+#   1 Home
+#   2 Writing
+#   3 Reading
+#   4 Research
+#   5 Development
+#   6 MIS
+#   7 Mail/Messages
+#   8 Meet
+#   9 VM
+#
+# This file intentionally uses zsh syntax and MUST remain executable.
+# yabai interprets a non-executable config using sh.
+
+# ----------------------------------------------------------------------
+# Deterministic service environment
+# ----------------------------------------------------------------------
+
+typeset -U path PATH
+
+path=(
+  /usr/local/bin
+  /usr/local/sbin
+  /usr/bin
+  /bin
+  /usr/sbin
+  /sbin
+)
+
+export PATH
+
+typeset -gr YABAI=/usr/local/bin/yabai
+typeset -gr JQ=/usr/local/bin/jq
+typeset -gr SKETCHYBAR=/usr/local/bin/sketchybar
+typeset -gr WORKSPACES_FILE="$HOME/.config/yabai/workspaces.tsv"
+
+if [[ ! -x $YABAI ]]; then
+  print -ru2 -- "[yabai] error: yabai not found at $YABAI"
+  exit 1
+fi
+
+if [[ ! -x $JQ ]]; then
+  print -ru2 -- "[yabai] error: jq not found at $JQ"
+  exit 1
+fi
+
+log() {
+  print -r -- "[yabai] $*"
+}
+
+warn() {
+  print -ru2 -- "[yabai] warning: $*"
+}
+
+
+# ----------------------------------------------------------------------
+# Helpers
+# ----------------------------------------------------------------------
+
+ensure_space() {
+  local -i idx=$1
+
+  # Create spaces until this Mission Control index exists.
+  #
+  # Note: yabai creates a new space on the currently active display.
+  # This preserves the behaviour of the previous configuration.
+  while ! "$YABAI" -m query --spaces --space "$idx" >/dev/null 2>&1; do
+    if ! "$YABAI" -m space --create >/dev/null 2>&1; then
+      warn "could not create space $idx"
+      return 1
+    fi
+
+    /bin/sleep 0.1
+  done
+}
+
+
+label_space() {
+  local -i idx=$1
+  local name=$2
+  local current_label target_idx
+
+  # Preserve semantic labels after topology moves a Space and macOS changes its
+  # Mission Control index.
+  if "$YABAI" -m query --spaces --space "$name" >/dev/null 2>&1; then
+    return 0
+  fi
+
+  ensure_space "$idx" || return 1
+
+  current_label=$(
+    "$YABAI" -m query --spaces --space "$idx" 2>/dev/null |
+      "$JQ" -r '.label // empty'
+  )
+  if [[ -n $current_label && $current_label != $name ]]; then
+    target_idx=$(
+      "$YABAI" -m query --spaces 2>/dev/null |
+        "$JQ" -r '
+          first(
+            .[]
+            | select(
+                (.label // "") == "" and
+                .["is-native-fullscreen"] == false
+              )
+            | .index
+          ) // empty
+        '
+    )
+
+    if [[ -z $target_idx ]]; then
+      if ! "$YABAI" -m space --create >/dev/null 2>&1; then
+        warn "could not create a space for missing label '$name'"
+        return 1
+      fi
+      /bin/sleep 0.1
+      target_idx=$(
+        "$YABAI" -m query --spaces 2>/dev/null |
+          "$JQ" -r '
+            last(
+              .[]
+              | select(
+                  (.label // "") == "" and
+                  .["is-native-fullscreen"] == false
+                )
+              | .index
+            ) // empty
+          '
+      )
+    fi
+
+    if [[ -z $target_idx ]]; then
+      warn "could not find an unlabeled space for '$name'"
+      return 1
+    fi
+
+    idx=$target_idx
+  fi
+
+  if ! "$YABAI" -m space "$idx" --label "$name" >/dev/null 2>&1; then
+    warn "could not label space $idx as '$name'"
+    return 1
+  fi
+
+  return 0
+}
+
+
+add_rule() {
+  local label=$1
+  shift
+
+  # Remove an existing labelled rule first so this file can also be
+  # executed manually against an already-running yabai instance.
+  "$YABAI" -m rule --remove "$label" >/dev/null 2>&1
+
+  if ! "$YABAI" -m rule --add label="$label" "$@"; then
+    warn "could not add rule '$label'"
+    return 1
+  fi
+}
+
+
+add_signal() {
+  local label=$1
+  shift
+
+  "$YABAI" -m signal --remove "$label" >/dev/null 2>&1
+
+  if ! "$YABAI" -m signal --add label="$label" "$@"; then
+    warn "could not add signal '$label'"
+    return 1
+  fi
+}
+
+
+# ----------------------------------------------------------------------
+# Scripting addition
+# ----------------------------------------------------------------------
+#
+# Requires the yabai --load-sa sudoers entry to be configured.
+# Remember that current yabai sudoers guidance includes the binary hash,
+# which must be refreshed after a yabai upgrade.
+
+if ! /usr/bin/sudo "$YABAI" --load-sa >/dev/null 2>&1; then
+  warn "scripting addition could not be loaded"
+fi
+
+add_signal \
+  "load-sa-on-dock-restart" \
+  event=dock_did_restart \
+  action="/usr/bin/sudo $YABAI --load-sa >/dev/null 2>&1"
+
+
+# ----------------------------------------------------------------------
+# Workspace model
+#
+# workspaces.tsv is the canonical source for indices, labels, layouts,
+# default-focus applications, and placement rules.
+# ----------------------------------------------------------------------
+
+[[ -r $WORKSPACES_FILE ]] || {
+  print -ru2 -- "[yabai] error: workspace model not found: $WORKSPACES_FILE"
+  exit 1
+}
+
+typeset -a SPACE_NAMES SPACE_LAYOUTS SPACE_APPS
+typeset workspace_default
+
+while IFS=$'\t' read -r idx name layout workspace_default apps; do
+  [[ $idx == <-> && -n $name && -n $layout && -n $apps ]] || {
+    print -ru2 -- "[yabai] error: invalid workspace record: $idx $name"
+    exit 1
+  }
+
+  SPACE_NAMES[$idx]=$name
+  SPACE_LAYOUTS[$idx]=$layout
+  SPACE_APPS[$idx]=$apps
+done < "$WORKSPACES_FILE"
+
+# ----------------------------------------------------------------------
+# Ensure and label spaces first
+#
+# Rules can then use stable semantic labels such as "Research".
+# ----------------------------------------------------------------------
+
+typeset -i idx
+typeset name layout apps safe_name
+
+for (( idx = 1; idx <= ${#SPACE_NAMES}; ++idx )); do
+  name=${SPACE_NAMES[$idx]}
+
+  log "Preparing space $idx: $name"
+
+  label_space "$idx" "$name"
+done
+
+
+# ----------------------------------------------------------------------
+# Application placement rules
+# ----------------------------------------------------------------------
+
+for (( idx = 1; idx <= ${#SPACE_NAMES}; ++idx )); do
+  name=${SPACE_NAMES[$idx]}
+  apps=${SPACE_APPS[$idx]}
+
+  [[ -n $apps ]] || continue
+
+  # Turn "Mail/Messages", etc. into a safe yabai rule label.
+  safe_name=${name//[^[:alnum:]]/}
+
+  add_rule \
+    "space-${idx}-${safe_name}" \
+    app="^(${apps})$" \
+    space="$name"
+done
+
+
+# ----------------------------------------------------------------------
+# Window management rules
+#
+# Important:
+#   All matching rules are combined in registration order.
+#   If two matching rules set the same property, the later rule wins.
+#
+# Therefore broad manage=on rules come BEFORE specific floating rules.
+# ----------------------------------------------------------------------
+
+# Force ordinary windows from apps that sometimes expose unusual helper
+# windows to be managed. More-specific rules below may override this.
+add_rule \
+  "force-manage-standard-windows" \
+  app="^(Microsoft Outlook|Microsoft Teams|Adobe Photoshop 2025|Adobe Illustrator 2025|Adobe InDesign 2025)$" \
+  role="AXWindow" \
+  subrole="AXStandardWindow" \
+  manage=on
+
+
+# Floating/sticky utilities.
+# Keep this deliberately small: sticky windows follow every space.
+add_rule \
+  "float-sticky-utilities" \
+  app="^(Activity Monitor|Calculator|System Settings|Dictionary|Notes|ADI-2 Remote|Reminders|1Password|Bitwarden)$" \
+  sticky=on \
+  manage=off \
+  sub-layer=above
+
+
+# Launchers, transient system tools, and background helpers.
+add_rule \
+  "float-system-and-launchers" \
+  app="^(Raycast|Alfred Preferences|Software Update|Photo Booth|Archive Utility|The Unarchiver|Installer|ImageOptim|Hosting AU|Little Snitch|LuLu|Stats)$" \
+  manage=off
+
+
+# Media and one-off players.
+add_rule \
+  "float-media-tools" \
+  app="^(VLC|IINA|QuickTime Player|Music|Plex[Aa]mp|PunyTunes|TIDAL|Spotify)$" \
+  manage=off
+
+
+# Mail compose/reply windows should float, while the main application
+# window remains eligible for normal management.
+#
+# This deliberately follows force-manage-standard-windows so it wins
+# for matching Outlook compose windows.
+add_rule \
+  "float-mail-compose" \
+  app="^(Mail|Microsoft Outlook|Spark|Postbox)$" \
+  title="^(New Message|Message|Re:|Reply|Forward|Untitled|Compose)" \
+  manage=off
+
+
+# Accessibility dialog/floating-window subroles are much safer than a
+# global title rule such as "Dr..." or "General...".
+add_rule \
+  "float-dialog-subroles" \
+  subrole="^(AXDialog|AXFloatingWindow|AXSystemDialog)$" \
+  manage=off
+
+
+# Finder-specific transient windows.
+add_rule \
+  "float-finder-dialogs" \
+  app="^Finder$" \
+  title="^(Copy|Connect|Move|Info|Get Info|Trash|Bin|Preferences|Finder Settings)" \
+  manage=off
+
+
+# Exact/common modal titles as a fallback.
+add_rule \
+  "float-common-dialog-titles" \
+  title="^(About This Mac|Print|Save( As)?|Open|Export|Import|Properties|Get Info)$" \
+  manage=off
+
+
+# App-specific floating dialogs.
+add_rule \
+  "float-glm-prep" \
+  app="^GLMv4$" \
+  title="^Preparations for Measurements$" \
+  manage=off
+
+add_rule \
+  "float-cyberduck-transfers" \
+  app="^Cyberduck$" \
+  title="^Transfers$" \
+  manage=off
+
+
+# DEVONthink: normal windows belong on Research; panels float.
+add_rule \
+  "devonthink-activity-log" \
+  app="^DEVONthink$" \
+  title="^(Activity|Log)$" \
+  manage=off
+
+add_rule \
+  "devonthink-sorter-title" \
+  app="^DEVONthink$" \
+  title=".*(Sorter|Clip to DEVONthink|Take Note).*" \
+  manage=off \
+  sticky=on \
+  sub-layer=above
+
+
+# Retained from the previous configuration.
+# Verify the app field with `yabai -m query --windows` if this helper
+# ever fails to match; yabai's `app` field is the application name.
+add_rule \
+  "devonthink-sorter-xpc" \
+  app="^com\.devon-technologies\.get$" \
+  manage=off \
+  sticky=on \
+  sub-layer=above
+
+
+# ----------------------------------------------------------------------
+# Apply rules to windows that already existed when yabai started.
+#
+# Current yabai rules normally affect newly-created windows. --apply
+# applies the registered rule set to current windows too.
+# ----------------------------------------------------------------------
+
+if ! "$YABAI" -m rule --apply >/dev/null 2>&1; then
+  warn "could not apply rules to existing windows"
+fi
+
+
+# ----------------------------------------------------------------------
+# Core yabai configuration
+#
+# Do this AFTER rules have been registered/applied. In particular, this
+# prevents existing floating windows from unnecessarily being absorbed
+# into a bsp layout during a service restart.
+# ----------------------------------------------------------------------
+
+typeset -a yabai_config=(
+  window_placement     second_child
+  focus_follows_mouse  autofocus
+  mouse_modifier       fn
+  menubar_opacity      1.0
+  auto_balance         x-axis
+  top_padding          32
+  bottom_padding       0
+  left_padding         0
+  right_padding        0
+  window_gap           4
+  layout               bsp
+)
+
+if ! "$YABAI" -m config "${yabai_config[@]}"; then
+  warn "one or more global configuration values could not be applied"
+fi
+
+
+# ----------------------------------------------------------------------
+# Per-space layouts
+#
+# Global default is bsp; selected workspaces are explicitly overridden.
+# ----------------------------------------------------------------------
+
+for (( idx = 1; idx <= ${#SPACE_NAMES}; ++idx )); do
+  name=${SPACE_NAMES[$idx]}
+  layout=${SPACE_LAYOUTS[$idx]}
+
+  log "Setting space $idx ($name) to $layout"
+
+  if ! "$YABAI" -m space "$name" --layout "$layout" >/dev/null 2>&1; then
+    warn "could not set layout '$layout' for '$name'"
+  fi
+done
+
+# ----------------------------------------------------------------------
+# Default application focus
+#
+# When spaces 1–6 become active, focus that workspace's designated
+# application if it has a non-minimized window on that space.
+#
+# Spaces 7–9 intentionally have no default application.
+#
+# yabai executes signal actions through /usr/bin/env sh -c. The helper
+# is executable and has its own zsh shebang, so the action itself stays
+# POSIX-shell-compatible.
+# ----------------------------------------------------------------------
+
+typeset -gr FOCUS_DEFAULT_APP="$HOME/.config/yabai/focus-default-app.zsh"
+
+if [[ -x $FOCUS_DEFAULT_APP ]]; then
+  add_signal \
+    "focus-default-app-on-space-change" \
+    event=space_changed \
+    action="$FOCUS_DEFAULT_APP"
+else
+  warn "default-app focus helper not executable: $FOCUS_DEFAULT_APP"
+fi
+
+
+# ----------------------------------------------------------------------
+# SketchyBar refresh hooks
+#
+# yabai signal actions are executed through /usr/bin/env sh -c, so these
+# action strings intentionally remain POSIX-shell-compatible.
+# ----------------------------------------------------------------------
+
+if [[ -x $SKETCHYBAR ]]; then
+  typeset -r refresh_spaces="$SKETCHYBAR --trigger yabai_window_change >/dev/null 2>&1"
+  typeset -r refresh_spaces_later="/bin/sleep 0.1; $refresh_spaces"
+
+  add_signal \
+    "sketchybar-space-changed" \
+    event=space_changed \
+    action="$refresh_spaces"
+
+  add_signal \
+    "sketchybar-window-created" \
+    event=window_created \
+    action="$refresh_spaces_later"
+
+  add_signal \
+    "sketchybar-window-destroyed" \
+    event=window_destroyed \
+    action="$refresh_spaces_later"
+
+  add_signal \
+    "sketchybar-window-moved" \
+    event=window_moved \
+    action="$refresh_spaces_later"
+
+  add_signal \
+    "sketchybar-window-focused" \
+    event=window_focused \
+    action="$refresh_spaces"
+
+  add_signal \
+    "sketchybar-application-launched" \
+    event=application_launched \
+    action="$refresh_spaces_later"
+
+  add_signal \
+    "sketchybar-application-terminated" \
+    event=application_terminated \
+    action="$refresh_spaces_later"
+
+  "$SKETCHYBAR" --trigger yabai_window_change >/dev/null 2>&1
+fi
+
+
+log "yabai configuration loaded."

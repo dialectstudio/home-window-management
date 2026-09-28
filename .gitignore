@@ -1,0 +1,42 @@
+# .gitignore
+
+# macOS and local session state
+.DS_Store
+.session_ids*
+*.sublime-workspace
+__pycache__/
+*.py[co]
+*.log
+*.dat
+
+# Historical root copies
+README.md-original
+*sublime-project-disabled
+
+# SketchyBar local configuration, generated state, and historical copies
+sketchybar/config/*.conf
+!sketchybar/config/*.conf.example
+sketchybar/config/zz_*
+sketchybar/debug.log
+sketchybar/get
+sketchybar/save
+sketchybar/window_title.dat
+sketchybar/*.zip
+sketchybar/items/zz_*
+sketchybar/plugins/zz_*
+sketchybar/plugins/*.backup.*
+
+# General archives, backups, and historical copies
+*.zip
+*.tar
+*.gz
+*.backup
+*.backup.*
+*original*
+*before-*
+**/zz_*
+
+# yabai machine-local topology and historical copies
+yabai/topology.local.zsh
+yabai/zz_*
+yabai/scripts/zz_*

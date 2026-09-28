@@ -1,0 +1,330 @@
+# ~/.config/skhd/skhdrc
+# Application launch + yabai controls
+#
+# skhd configuration syntax is its own DSL.
+# Command bodies are executed through $SHELL -c.
+#
+# Keep ordinary bindings shell-simple. Where zsh-specific shell logic
+# is useful, invoke /bin/zsh explicitly.
+#
+# Modifier policy:
+#   cmd + alt + shift  = application launcher layer
+#   cmd + alt          = new application window / utility layer
+#   alt + shift        = yabai focus / basic window actions
+#   ctrl + alt + shift = yabai move window / send window layer
+#   cmd + ctrl + alt   = daemon/system controls only
+#
+# Homebrew executables are referenced explicitly from /usr/local/bin
+# so skhd/launchd does not depend on an interactive-shell PATH.
+
+# ----------------------------------------------------------------------
+# Applications
+# Focus target space first, then open the app.
+# If the target space does not exist, the app still opens.
+# ----------------------------------------------------------------------
+
+#KeyClu[Application Launchers]: SP 7 — Airmail
+cmd + alt + shift - a : /usr/local/bin/yabai -m space --focus "Mail/Messages" >/dev/null 2>&1; /usr/bin/open -a "Airmail"
+
+#KeyClu[Application Launchers]: SP 7 — Calendar
+cmd + alt + shift - c : /usr/local/bin/yabai -m space --focus "Mail/Messages" >/dev/null 2>&1; /usr/bin/open -a "Calendar"
+
+#KeyClu[Application Launchers]: SP 4 — DEVONthink
+cmd + alt + shift - d : /usr/local/bin/yabai -m space --focus Research >/dev/null 2>&1; /usr/bin/open -a "DEVONthink"
+
+#KeyClu[Application Launchers]: SP 6 — Firefox
+cmd + alt + shift - f : /usr/local/bin/yabai -m space --focus MIS >/dev/null 2>&1; /usr/bin/open -a "Firefox"
+
+#KeyClu[Application Launchers]: SP 6 — Firefox Developer Edition
+cmd + alt + shift - e : /usr/local/bin/yabai -m space --focus MIS >/dev/null 2>&1; /usr/bin/open -a "Firefox Developer Edition"
+
+#KeyClu[Application Launchers]: SP 3 — Google Chrome
+cmd + alt + shift - g : /usr/local/bin/yabai -m space --focus Reading >/dev/null 2>&1; /usr/bin/open -a "Google Chrome"
+
+# cmd + alt + shift - i : /usr/bin/open -a "iTerm" # not needed, iTerm opens on login
+
+#KeyClu[Application Launchers]: SP 2 — Day One
+cmd + alt + shift - j : /usr/local/bin/yabai -m space --focus Writing >/dev/null 2>&1; /usr/bin/open -a "Day One"
+
+#KeyClu[Application Launchers]: SP 9 — Screen Sharing
+cmd + alt + shift - k : /usr/local/bin/yabai -m space --focus VM >/dev/null 2>&1; /usr/bin/open -a "Screen Sharing"
+
+#KeyClu[Application Launchers]: SP 1 — Music
+cmd + alt + shift - m : /usr/local/bin/yabai -m space --focus Home >/dev/null 2>&1; /usr/bin/open -a "Music"
+
+#KeyClu[Application Launchers]: SP 1 — PlexAmp
+cmd + alt + shift - n : /usr/local/bin/yabai -m space --focus Home >/dev/null 2>&1; /usr/bin/open -a "PlexAmp"
+
+#KeyClu[Application Launchers]: SP 2 — Obsidian
+cmd + alt + shift - o : /usr/local/bin/yabai -m space --focus Writing >/dev/null 2>&1; /usr/bin/open -a "Obsidian"
+
+#KeyClu[Application Launchers]: SP 1 — System Settings
+cmd + alt + shift - p : /usr/local/bin/yabai -m space --focus Home >/dev/null 2>&1; /usr/bin/open -a "System Settings"
+
+#KeyClu[Application Launchers]: SP 2 — Sublime Text
+cmd + alt + shift - s : /usr/local/bin/yabai -m space --focus Writing >/dev/null 2>&1; /usr/bin/open -a "Sublime Text"
+
+#KeyClu[Application Launchers]: Terminal
+cmd + alt + shift - t : /usr/bin/open -a "Terminal"
+
+#KeyClu[Application Launchers]: SP 9 — Windows App
+cmd + alt + shift - w : /usr/local/bin/yabai -m space --focus VM >/dev/null 2>&1; /usr/bin/open -a "Windows App"
+
+#KeyClu[Application Launchers]: SP 9 — YouTube
+cmd + alt + shift - y : /usr/local/bin/yabai -m space --focus VM >/dev/null 2>&1; /usr/bin/open -a "YouTube"
+
+#KeyClu[Application Launchers]: SP 1 — Disk Utility
+cmd + alt + shift - 0 : /usr/local/bin/yabai -m space --focus Home >/dev/null 2>&1; /usr/bin/open -a "Disk Utility"
+
+#KeyClu[Application Launchers]: SP 8 — zoom.us
+cmd + alt + shift - z : /usr/local/bin/yabai -m space --focus Meet >/dev/null 2>&1; /usr/bin/open -a "zoom.us"
+
+#KeyClu[Application Launchers]: SP 8 — Facetime
+cmd + alt + shift - x : /usr/local/bin/yabai -m space --focus Meet >/dev/null 2>&1; /usr/bin/open -a "Facetime"
+
+# Optional / currently parked
+# cmd + alt + shift - m : /usr/bin/open -a "Mail"
+# cmd + alt + shift - w : /usr/bin/open -a "Scrivener"
+# cmd + alt + shift - t : /usr/bin/open -a "TeXShop"
+
+
+# ----------------------------------------------------------------------
+# New application windows / utilities
+# ----------------------------------------------------------------------
+
+#KeyClu[New Windows / Utilities]: Open ChatGPT project launcher
+cmd + alt - c : "$HOME/bin/chatgpt-projects" open
+
+#KeyClu[New Windows / Utilities]: New Google Chrome window
+cmd + alt - g : /usr/bin/osascript -e 'tell application "Google Chrome"' -e 'make new window' -e 'activate' -e 'end tell'
+
+#KeyClu[New Windows / Utilities]: New iTerm window
+cmd + alt - i : /usr/bin/osascript -e 'tell application "iTerm"' -e 'create window with default profile' -e 'activate' -e 'end tell'
+
+#KeyClu[New Windows / Utilities]: New Finder window at Home
+cmd + alt - f : /usr/bin/osascript -e 'tell application "Finder"' -e 'make new Finder window to home' -e 'activate' -e 'end tell'
+
+#KeyClu[New Windows / Utilities]: New Sublime Text window
+cmd + alt - s : /usr/bin/osascript -e 'tell application "Sublime Text" to activate' -e 'delay 0.15' -e 'tell application "System Events" to keystroke "n" using {command down, shift down}'
+
+#KeyClu[New Windows / Utilities]: Manage ChatGPT projects
+cmd + alt - p : "$HOME/bin/chatgpt-projects" manage
+
+
+# ----------------------------------------------------------------------
+# Yabai: focus / navigate / basic actions
+# Keeps the directional logic on h/j/k/l from your Aerospace layer.
+# ----------------------------------------------------------------------
+
+# Focus windows by direction
+
+#KeyClu[Focus Windows]: Focus west
+alt + shift - h : /usr/local/bin/yabai -m window --focus west
+
+#KeyClu[Focus Windows]: Focus south
+alt + shift - j : /usr/local/bin/yabai -m window --focus south
+
+#KeyClu[Focus Windows]: Focus north
+alt + shift - k : /usr/local/bin/yabai -m window --focus north
+
+#KeyClu[Focus Windows]: Focus east
+alt + shift - l : /usr/local/bin/yabai -m window --focus east
+
+
+# Cycle windows on current space
+
+#KeyClu[Focus Windows]: Focus next; fallback first
+alt + shift - n : /usr/local/bin/yabai -m window --focus next || /usr/local/bin/yabai -m window --focus first
+
+#KeyClu[Focus Windows]: Focus previous; fallback last
+alt + shift - b : /usr/local/bin/yabai -m window --focus prev || /usr/local/bin/yabai -m window --focus last
+
+
+# ----------------------------------------------------------------------
+# Common macOS / app hotkey reminders for KeyClu
+# These are reference-only reminders.
+# Do NOT bind the actual system/app shortcuts here, because skhd will
+# intercept them before macOS, iTerm2, or DEVONthink receive them.
+# ----------------------------------------------------------------------
+
+#KeyClu[Common macOS]: Zoom — actual: Cmd+Opt+8
+cmd + ctrl + alt - 8 : /usr/bin/true
+
+#KeyClu[Common macOS]: Show hidden files — actual: Cmd+Shift+.
+cmd + ctrl + alt - h : /usr/bin/true
+
+#KeyClu[Common iTerm2 Keys]: Split Horizontal — actual: Cmd+Opt+Shift+H
+cmd + ctrl + alt + shift - h : /usr/bin/true
+
+#KeyClu[Common iTerm2 Keys]: Split Vertical — actual: Cmd+Opt+Shift+V
+cmd + ctrl + alt + shift - v : /usr/bin/true
+
+#KeyClu[Common DEVONthink Keys]: Take Note — actual: Ctrl+Opt+N
+cmd + ctrl + alt + shift - n : /usr/bin/true
+
+#KeyClu[Common DEVONthink Keys]: Clip — actual: Ctrl+Opt+Shift+N
+cmd + ctrl + alt + shift - c : /usr/bin/true
+
+#KeyClu[Common DEVONthink Keys]: Search — actual: Ctrl+Shift+\
+cmd + ctrl + alt + shift - 0x2A : /usr/bin/true
+
+#KeyClu[Common DEVONthink Keys]: Move — actual: Cmd+Ctrl+M
+cmd + ctrl + alt + shift - m : /usr/bin/true
+
+
+# Focus spaces directly
+
+#KeyClu[Focus Spaces]: Focus space 1
+alt + shift - 1 : /usr/local/bin/yabai -m space --focus Home
+
+#KeyClu[Focus Spaces]: Focus space 2
+alt + shift - 2 : /usr/local/bin/yabai -m space --focus Writing
+
+#KeyClu[Focus Spaces]: Focus space 3
+alt + shift - 3 : /usr/local/bin/yabai -m space --focus Reading
+
+#KeyClu[Focus Spaces]: Focus space 4
+alt + shift - 4 : /usr/local/bin/yabai -m space --focus Research
+
+#KeyClu[Focus Spaces]: Focus space 5
+alt + shift - 5 : /usr/local/bin/yabai -m space --focus Development
+
+#KeyClu[Focus Spaces]: Focus space 6
+alt + shift - 6 : /usr/local/bin/yabai -m space --focus MIS
+
+#KeyClu[Focus Spaces]: Focus space 7
+alt + shift - 7 : /usr/local/bin/yabai -m space --focus "Mail/Messages"
+
+#KeyClu[Focus Spaces]: Focus space 8
+alt + shift - 8 : /usr/local/bin/yabai -m space --focus Meet
+
+#KeyClu[Focus Spaces]: Focus space 9
+alt + shift - 9 : /usr/local/bin/yabai -m space --focus VM
+
+
+# Common window actions
+
+#KeyClu[Common Window Actions]: Even 50/50 BSP split
+alt + shift - 0 : "$HOME/.config/yabai/scripts/space-thirds.zsh" even
+
+#KeyClu[Common Window Actions]: Left 1/3 BSP split
+alt + shift - 0x21 : "$HOME/.config/yabai/scripts/space-thirds.zsh" left
+
+#KeyClu[Common Window Actions]: Right 1/3 BSP split
+alt + shift - 0x1E : "$HOME/.config/yabai/scripts/space-thirds.zsh" right
+
+#KeyClu[Common Window Actions]: Toggle float
+alt + shift - f : /usr/local/bin/yabai -m window --toggle float
+
+#KeyClu[Common Window Actions]: Toggle float; center 2×2 region
+alt + shift - r : /usr/local/bin/yabai -m window --toggle float --grid 4:4:1:1:2:2
+
+#KeyClu[Common Window Actions]: Toggle fullscreen zoom
+alt + shift - z : /usr/local/bin/yabai -m window --toggle zoom-fullscreen
+
+#KeyClu[Common Window Actions]: Toggle current space to bsp or float
+cmd + ctrl + alt - 0x2A : "$HOME/.config/yabai/scripts/toggle-space-layout.zsh"
+
+
+# ----------------------------------------------------------------------
+# Yabai: move window / send window
+# ctrl + alt + shift avoids collisions with your launcher layer.
+# ----------------------------------------------------------------------
+
+# Reinsert managed windows by direction
+
+#KeyClu[Reinsert Managed Windows]: Warp west
+ctrl + alt + shift - h : /usr/local/bin/yabai -m window --warp west
+
+#KeyClu[Reinsert Managed Windows]: Warp south
+ctrl + alt + shift - j : /usr/local/bin/yabai -m window --warp south
+
+#KeyClu[Reinsert Managed Windows]: Warp north
+ctrl + alt + shift - k : /usr/local/bin/yabai -m window --warp north
+
+#KeyClu[Reinsert Managed Windows]: Warp east
+ctrl + alt + shift - l : /usr/local/bin/yabai -m window --warp east
+
+
+# Send focused window to space and follow it
+
+#KeyClu[Send Window to Space and Follow]: Send to space 1 and follow
+ctrl + alt + shift - 1 : /usr/local/bin/yabai -m window --space Home --focus
+
+#KeyClu[Send Window to Space and Follow]: Send to space 2 and follow
+ctrl + alt + shift - 2 : /usr/local/bin/yabai -m window --space Writing --focus
+
+#KeyClu[Send Window to Space and Follow]: Send to space 3 and follow
+ctrl + alt + shift - 3 : /usr/local/bin/yabai -m window --space Reading --focus
+
+#KeyClu[Send Window to Space and Follow]: Send to space 4 and follow
+ctrl + alt + shift - 4 : /usr/local/bin/yabai -m window --space Research --focus
+
+#KeyClu[Send Window to Space and Follow]: Send to space 5 and follow
+ctrl + alt + shift - 5 : /usr/local/bin/yabai -m window --space Development --focus
+
+#KeyClu[Send Window to Space and Follow]: Send to space 6 and follow
+ctrl + alt + shift - 6 : /usr/local/bin/yabai -m window --space MIS --focus
+
+#KeyClu[Send Window to Space and Follow]: Send to space 7 and follow
+ctrl + alt + shift - 7 : /usr/local/bin/yabai -m window --space "Mail/Messages" --focus
+
+#KeyClu[Send Window to Space and Follow]: Send to space 8 and follow
+ctrl + alt + shift - 8 : /usr/local/bin/yabai -m window --space Meet --focus
+
+#KeyClu[Send Window to Space and Follow]: Send to space 9 and follow
+ctrl + alt + shift - 9 : /usr/local/bin/yabai -m window --space VM --focus
+
+
+# Optional tiled-window nudges
+
+#KeyClu[Tiled-Window Nudges]: Move left 50 px
+ctrl + alt + shift - left  : /usr/local/bin/yabai -m window --resize left:-50:0 || /usr/local/bin/yabai -m window --resize right:-50:0
+
+#KeyClu[Tiled-Window Nudges]: Move right 50 px
+ctrl + alt + shift - right : /usr/local/bin/yabai -m window --resize right:50:0 || /usr/local/bin/yabai -m window --resize left:50:0
+
+#KeyClu[Tiled-Window Nudges]: Move up 50 px
+ctrl + alt + shift - up    : /usr/local/bin/yabai -m window --resize top:0:-50 || /usr/local/bin/yabai -m window --resize bottom:0:-50
+
+#KeyClu[Tiled-Window Nudges]: Move down 50 px
+ctrl + alt + shift - down  : /usr/local/bin/yabai -m window --resize bottom:0:50 || /usr/local/bin/yabai -m window --resize top:0:50
+
+
+# ----------------------------------------------------------------------
+# Edit Control files
+# ----------------------------------------------------------------------
+
+# Config/control-file picker
+#KeyClu[Control File Picker]: Edit a control file in an iTerm window
+ctrl + alt - c : /bin/zsh -lc '$HOME/bin/configctl --iterm'
+
+# ----------------------------------------------------------------------
+# Development project launcher
+# ----------------------------------------------------------------------
+#KeyClu[Dev project launcher]: Development project launcher
+ctrl + alt - d : $HOME/bin/dev
+
+# ----------------------------------------------------------------------
+# Service controls
+# ----------------------------------------------------------------------
+
+#KeyClu[Service Controls]: Restart borders service
+cmd + ctrl + alt - b : /usr/local/bin/brew services restart borders
+
+#KeyClu[Service Controls]: Reload SketchyBar
+cmd + ctrl + alt - s : /usr/local/bin/sketchybar --reload
+
+#KeyClu[Service Controls]: Reload skhd config
+cmd + ctrl + alt - k : /usr/bin/pkill -x KeyClu >/dev/null 2>&1; while /usr/bin/pgrep -x KeyClu >/dev/null 2>&1; do /bin/sleep 0.05; done; /usr/bin/open -g /Applications/KeyClu.app; /usr/local/bin/skhd --reload
+
+#KeyClu[Service Controls]: Restart yabai service
+cmd + ctrl + alt - y : /usr/local/bin/yabai --restart-service
+
+
+# ----------------------------------------------------------------------
+# KeyClu skhd reference panel
+# ----------------------------------------------------------------------
+
+#KeyClu[Reference]: Show skhd reference panel
+cmd + ctrl + alt - r : /Applications/KeyClu.app/Contents/MacOS/KeyClu --toggle-panel --sheet skhd --columns 5

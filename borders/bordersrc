@@ -1,0 +1,12 @@
+#!/usr/bin/env zsh
+
+border_options=(
+	style=round
+	width=3.0
+	hidpi=off
+	active_color=0xff00ff00
+	inactive_color=0xffc8c8c8
+	blacklist="Activity Monitor,Finder,PunyTunes,SpeedDock,System Settings,TigerVNC"
+)
+
+/usr/local/bin/borders "${border_options[@]}"

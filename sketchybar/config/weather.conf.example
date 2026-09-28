@@ -1,0 +1,13 @@
+# Copy to weather.conf and keep the local file out of Git.
+
+WEATHER_QUERY="auto:ip"
+WEATHER_UNITS="metric"
+WEATHER_AQI="yes"
+WEATHER_LANG=""
+WEATHER_LABEL_MODE="temp"
+
+# Optional per-Network-Location overrides. Keys must match names reported by
+# `networksetup -getcurrentlocation`.
+declare -A WEATHER_QUERY_BY_LOCATION=(
+  [Automatic]="auto:ip"
+)
